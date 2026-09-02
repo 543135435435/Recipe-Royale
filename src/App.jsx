@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import MainLayout from './layouts/MainLayout';
 import { ProtectedRoute, AdminRoute } from './components/common/ProtectedRoute';
+import CinematicIntro from './components/intro/CinematicIntro';
 
 // Public pages - lazy loaded
 const Home = lazy(() => import('./pages/Home'));
@@ -56,10 +57,27 @@ function PageLoader() {
   );
 }
 
+function IntroGate({ children }) {
+  const [introComplete, setIntroComplete] = useState(() => {
+    return sessionStorage.getItem('recipe_royale_intro_seen') === 'true';
+  });
+
+  const handleComplete = useCallback(() => {
+    setIntroComplete(true);
+  }, []);
+
+  if (!introComplete) {
+    return <CinematicIntro onComplete={handleComplete} />;
+  }
+
+  return children;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Toaster position="top-right" richColors closeButton />
+      <IntroGate>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route element={<MainLayout />}>
@@ -117,6 +135,7 @@ export default function App() {
           </Route>
         </Routes>
       </Suspense>
+      </IntroGate>
     </BrowserRouter>
   );
 }
